@@ -21,6 +21,7 @@
   <!-- Compile items. -->
   <ItemGroup>
       <Compile Include="src/Program.cs" />
+      <Compile Include="src/Editor.cs" />
   </ItemGroup>
 
 </Project>

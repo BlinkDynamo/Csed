@@ -30,62 +30,13 @@
 using System;
 
 namespace Csed
-{
-    class Editor
-    {
-        // Constructor and instance check method.
-        private static Editor? instance;
-
-        private Editor()
-        {
-            // PASS
-        } 
-        
-        // Ensure that only one instance of the editor exists at one time.
-        public static Editor GetInstance()
-        {
-            if (instance == null) {
-                instance = new Editor();
-            }
-            return instance;
-        }
-        
-        // Destructor.
-        ~Editor()
-        {
-            // PASS
-        }
-       
-        // Methods. 
-        private static ConsoleKeyInfo key; // The main key-by-key input.
-
-        public bool EditorShouldClose()
-        {
-            if (key.Key == ConsoleKey.Escape) {
-                return true;
-            } 
-            else {
-                return false;
-            }
-        }
-
-        public int RunMainEventLoop()
-        {        
-            do {
-               key = Console.ReadKey(true);
-               Console.WriteLine($"Key Pressed: {key.KeyChar}");
-            }
-            while (!EditorShouldClose()); 
-            return 0;
-        }
-    }
-        
-    class Program
+{   
+    public class Program
     {
         static int Main(string [] args)
         {
             Editor editor = Editor.GetInstance();
-            editor.RunMainEventLoop();
+            editor.MainEventLoop();
             return 0;
         }
     }
