@@ -27,63 +27,45 @@
 *
 *********************************************************************************************/
 
-using System;
+using Terminal.Gui;
 
 namespace Csed
 {
     public class Editor
     {
-        // Constructor and instance check method.
-        private static Editor? instance;
-        
-        // Ensure that only one instance of the editor exists at one time.
-        public static Editor GetInstance()
+        public void Edit(string filename)
         {
-            if (instance == null) {
-                instance = new Editor();
-            }
-            return instance;
-        }
-        
-        private Editor()
-        {
-           Console.TreatControlCAsInput = true; 
-           RefreshInterface();
-        } 
-        
-        // Destructor.
-        ~Editor()
-        {
-            // PASS
-        }
-       
-        // Class variables. 
-        private static ConsoleKeyInfo cki; // The main key-by-key input.
-        private bool ShouldClose = false;
+            Application.Init();
 
-        // Class methods. 
-        private void ProcessKeypress() 
-        {
-            cki = Console.ReadKey(true);
-            if ((cki.Modifiers & ConsoleModifiers.Alt) != 0) Console.Write("ALT+");
-            if ((cki.Modifiers & ConsoleModifiers.Shift) != 0) Console.Write("SHIFT+");
-            if ((cki.Modifiers & ConsoleModifiers.Control) != 0) Console.Write("CTL+");
-            if (cki.Key == ConsoleKey.Escape) ShouldClose = true;
-            Console.WriteLine("{0} (character '{1}')", cki.Key, cki.KeyChar);
-        }
+            MenuBar menu = new MenuBar(new MenuBarItem[] {
+                new MenuBarItem("_File", new MenuItem[] {
+                    new MenuItem("_Close", "", () => {
+                        Application.RequestStop();
+                    })
+                }),
+            });
 
-        private void RefreshInterface()
-        {
-            Console.Clear();
-        }
+            // Nest a window for the editor.
+            Window win = new Window(filename) {
+                X = 0,
+                Y = 0,
+                Width = Dim.Fill(),
+                Height = Dim.Fill() - 1
+            };
 
-        public int MainEventLoop()
-        {        
-            while (!ShouldClose)
-            { 
-                ProcessKeypress(); 
-            }
-            return 0;
+            TextView editor = new TextView() {
+                X = 0,
+                Y = 0,
+                Width = Dim.Fill(),
+                Height = Dim.Fill()
+            };
+
+            editor.Text = System.IO.File.ReadAllText(filename);
+            win.Add(editor);
+
+            Application.Top.Add(menu, win);
+            Application.Run();
+            Application.Shutdown();
         }
-    } 
+    }
 }

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <!-- Assembly and namespace name. -->
-    <AssemblyName>Csed</AssemblyName>
+    <AssemblyName>csed</AssemblyName>
     <RootNamespace>Csed</RootNamespace>
 
     <!-- Enable manually listing compile items. -->
@@ -22,6 +22,9 @@
   <ItemGroup>
       <Compile Include="src/Program.cs" />
       <Compile Include="src/Editor.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Terminal.Gui" Version="1.18.0" />
   </ItemGroup>
 
 </Project>

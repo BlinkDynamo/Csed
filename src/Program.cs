@@ -35,9 +35,16 @@ namespace Csed
     {
         static int Main(string [] args)
         {
-            Editor editor = Editor.GetInstance();
-            editor.MainEventLoop();
-            return 0;
+            if (args.Length == 1) {
+                Editor editor = new Editor();
+                editor.Edit(args[0]);
+                return 0;
+            }
+            else { 
+                Console.WriteLine("Invalid usage.");
+                Console.WriteLine("Usage: csed <FILENAME>");
+                return 1;
+            }
         }
     }
 }
