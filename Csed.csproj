@@ -23,6 +23,8 @@
       <Compile Include="src/Program.cs" />
       <Compile Include="src/Editor.cs" />
   </ItemGroup>
+
+  <!-- Packages. -->
   <ItemGroup>
     <PackageReference Include="Terminal.Gui" Version="1.18.0" />
   </ItemGroup>

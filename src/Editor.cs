@@ -33,38 +33,50 @@ namespace Csed
 {
     public class Editor
     {
-        public void Edit(string filename)
+        // Fields.
+        private MenuBar menu;
+        private Window win;
+        private TextView editor;
+        
+        public Editor()
         {
             Application.Init();
 
-            MenuBar menu = new MenuBar(new MenuBarItem[] {
+            menu = new MenuBar(new MenuBarItem[] {
                 new MenuBarItem("_File", new MenuItem[] {
                     new MenuItem("_Close", "", () => {
+                        Application.RequestStop();
+                    }),
+                    new MenuItem("_Save", "", () => {
                         Application.RequestStop();
                     })
                 }),
             });
 
             // Nest a window for the editor.
-            Window win = new Window(filename) {
+            win = new Window() {
                 X = 0,
                 Y = 0,
                 Width = Dim.Fill(),
                 Height = Dim.Fill() - 1
             };
 
-            TextView editor = new TextView() {
+            editor = new TextView() {
                 X = 0,
                 Y = 0,
                 Width = Dim.Fill(),
                 Height = Dim.Fill()
             };
+        }
 
+        public void Edit(string filename)
+        {
             editor.Text = System.IO.File.ReadAllText(filename);
             win.Add(editor);
-
             Application.Top.Add(menu, win);
+
             Application.Run();
+
             Application.Shutdown();
         }
     }
