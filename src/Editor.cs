@@ -33,18 +33,18 @@ namespace Csed
 {
     public class Editor
     {
-        // Fields.
         private MenuBar MainMenu;
         private Window MainWindow;
         private TextView MainTextView;
 
         // Both the field and property are nullable in case just `csed` is entered.
-        private string? Field_PathToFile;
+        private string? PathToFile;
         public string? Property_PathToFile
         {
-            get { return Field_PathToFile; }
-            set { Field_PathToFile = value; }
+            get { return PathToFile; }
+            set { PathToFile = value; }
         }
+        private bool FileIsLoaded = false; // Lets me check if a file is loaded before calling tv.CloseFile().
         
         public Editor()
         {
@@ -53,11 +53,22 @@ namespace Csed
             // Gui setup.
             MainMenu = new MenuBar(new MenuBarItem[] {
                 new MenuBarItem("_File", new MenuItem[] {
+                    new MenuItem("_Open", "", () => {
+                        OpenDialog FileDialog = new OpenDialog("Open", "");
+
+                        FileDialog.CanChooseDirectories = false;
+                        FileDialog.CanChooseFiles = true;
+                        FileDialog.AllowsMultipleSelection = false;
+
+                        Application.Run(FileDialog);
+
+                        CsedOpenFile(FileDialog.FilePath.ToString(), ref FileIsLoaded, MainTextView); 
+                    }),
                     new MenuItem("_Save", "", () => {
-                        CsedSaveFile(Field_PathToFile, MainTextView); 
+                        CsedSaveFile(PathToFile, MainTextView); 
                     }),
                     new MenuItem("_Close", "", () => {
-                        CsedCloseFile(MainTextView); 
+                        CsedCloseFile(ref FileIsLoaded, MainTextView); 
                     }),
                     new MenuItem("_Quit", "", () => {
                         Application.RequestStop();
@@ -81,30 +92,32 @@ namespace Csed
             }; 
         }
 
-        private void CsedSaveFile(string? pathToFile, TextView? tv)  
+        private void CsedSaveFile(string? PathToFile, TextView? tv)  
         {
-            if ((pathToFile != null) && (tv != null)) {
-                System.IO.File.WriteAllText(pathToFile, tv.Text.ToString());
+            if ((PathToFile != null) && (tv != null)) {
+                System.IO.File.WriteAllText(PathToFile, tv.Text.ToString());
             }
         }
 
-        private void CsedOpenFile(string? pathToFile, TextView? tv) 
+        private void CsedOpenFile(string? PathToFile, ref bool FileIsLoaded, TextView? tv) 
         {
-            if ((pathToFile != null) && (tv != null)) { 
-                tv.LoadFile(pathToFile);
+            if ((PathToFile != null) && (tv != null)) { 
+                tv.LoadFile(PathToFile);
+                FileIsLoaded = true;
             }
         }
 
-        private void CsedCloseFile(TextView? tv) 
+        private void CsedCloseFile(ref bool FileIsLoaded, TextView? tv) 
         {
-            if (tv != null) {
+            if ((tv != null) && (FileIsLoaded)){
                 tv.CloseFile();
+                FileIsLoaded = false;
             }
         }
         
         public void CsedRun()
         {
-            CsedOpenFile(Field_PathToFile, MainTextView); 
+            CsedOpenFile(PathToFile, ref FileIsLoaded, MainTextView); 
 
             MainWindow.Add(MainTextView);
 
