@@ -34,34 +34,47 @@ namespace Csed
     public class Editor
     {
         // Fields.
-        private MenuBar menu;
-        private Window win;
-        private TextView editor;
+        private MenuBar mainMenu;
+        private Window mainWindow;
+        private TextView mainTextView;
+        private TextView commandTextView;
+
+        // Both the field and property are nullable in case just `csed` is entered.
+        private string? filename;
+        public string? Filename
+        {
+            get { return filename; }
+            set { filename = value; }
+        }
         
         public Editor()
         {
             Application.Init();
 
-            menu = new MenuBar(new MenuBarItem[] {
+            // Gui setup.
+            mainMenu = new MenuBar(new MenuBarItem[] {
                 new MenuBarItem("_File", new MenuItem[] {
+                    new MenuItem("_Save", "", () => {
+                        CsedSaveFile(); 
+                    }),
                     new MenuItem("_Close", "", () => {
+                        CsedCloseFile(); 
+                    }),
+                    new MenuItem("_Quit", "", () => {
                         Application.RequestStop();
                     }),
-                    new MenuItem("_Save", "", () => {
-                        Application.RequestStop();
-                    })
                 }),
             });
 
-            // Nest a window for the editor.
-            win = new Window() {
+            // Nest a mainWindowdow for the editor.
+            mainWindow = new Window() {
                 X = 0,
                 Y = 0,
                 Width = Dim.Fill(),
                 Height = Dim.Fill() - 1
             };
 
-            editor = new TextView() {
+            mainTextView = new TextView() {
                 X = 0,
                 Y = 0,
                 Width = Dim.Fill(),
@@ -69,11 +82,29 @@ namespace Csed
             };
         }
 
-        public void Edit(string filename)
+        private void CsedSaveFile() 
         {
-            editor.Text = System.IO.File.ReadAllText(filename);
-            win.Add(editor);
-            Application.Top.Add(menu, win);
+            if (filename != null) {
+                System.IO.File.WriteAllText(filename, mainTextView.Text.ToString());
+            }
+        }
+
+        private void CsedCloseFile()
+        {
+            if (mainTextView != null) {
+                mainTextView.CloseFile();
+            }
+        }
+        
+        public void CsedEditFile()
+        {
+            // Load the text from file "filename" into the object "text".
+            if (filename != null) {
+                mainTextView.LoadFile(filename);
+            }
+            mainWindow.Add(mainTextView);
+
+            Application.Top.Add(mainMenu, mainWindow);
 
             Application.Run();
 
