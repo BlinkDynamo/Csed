@@ -42,9 +42,9 @@ namespace Csed
             }
             Editor e = new Editor();
             if (args.Length == 1) {
-                e.Filename = args[0];
+                e.Property_PathToFile = args[0];
             }
-            e.CsedEditFile();
+            e.CsedRun();
             return 0;
         }
             

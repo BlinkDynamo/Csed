@@ -34,17 +34,16 @@ namespace Csed
     public class Editor
     {
         // Fields.
-        private MenuBar mainMenu;
-        private Window mainWindow;
-        private TextView mainTextView;
-        private TextView commandTextView;
+        private MenuBar MainMenu;
+        private Window MainWindow;
+        private TextView MainTextView;
 
         // Both the field and property are nullable in case just `csed` is entered.
-        private string? filename;
-        public string? Filename
+        private string? Field_PathToFile;
+        public string? Property_PathToFile
         {
-            get { return filename; }
-            set { filename = value; }
+            get { return Field_PathToFile; }
+            set { Field_PathToFile = value; }
         }
         
         public Editor()
@@ -52,13 +51,13 @@ namespace Csed
             Application.Init();
 
             // Gui setup.
-            mainMenu = new MenuBar(new MenuBarItem[] {
+            MainMenu = new MenuBar(new MenuBarItem[] {
                 new MenuBarItem("_File", new MenuItem[] {
                     new MenuItem("_Save", "", () => {
-                        CsedSaveFile(); 
+                        CsedSaveFile(Field_PathToFile, MainTextView); 
                     }),
                     new MenuItem("_Close", "", () => {
-                        CsedCloseFile(); 
+                        CsedCloseFile(MainTextView); 
                     }),
                     new MenuItem("_Quit", "", () => {
                         Application.RequestStop();
@@ -66,45 +65,50 @@ namespace Csed
                 }),
             });
 
-            // Nest a mainWindowdow for the editor.
-            mainWindow = new Window() {
+            // Nest a MainWindowdow for the editor.
+            MainWindow = new Window() {
                 X = 0,
                 Y = 0,
                 Width = Dim.Fill(),
                 Height = Dim.Fill() - 1
             };
 
-            mainTextView = new TextView() {
+            MainTextView = new TextView() {
                 X = 0,
                 Y = 0,
                 Width = Dim.Fill(),
                 Height = Dim.Fill()
-            };
+            }; 
         }
 
-        private void CsedSaveFile() 
+        private void CsedSaveFile(string? pathToFile, TextView? tv)  
         {
-            if (filename != null) {
-                System.IO.File.WriteAllText(filename, mainTextView.Text.ToString());
+            if ((pathToFile != null) && (tv != null)) {
+                System.IO.File.WriteAllText(pathToFile, tv.Text.ToString());
             }
         }
 
-        private void CsedCloseFile()
+        private void CsedOpenFile(string? pathToFile, TextView? tv) 
         {
-            if (mainTextView != null) {
-                mainTextView.CloseFile();
+            if ((pathToFile != null) && (tv != null)) { 
+                tv.LoadFile(pathToFile);
+            }
+        }
+
+        private void CsedCloseFile(TextView? tv) 
+        {
+            if (tv != null) {
+                tv.CloseFile();
             }
         }
         
-        public void CsedEditFile()
+        public void CsedRun()
         {
-            // Load the text from file "filename" into the object "text".
-            if (filename != null) {
-                mainTextView.LoadFile(filename);
-            }
-            mainWindow.Add(mainTextView);
+            CsedOpenFile(Field_PathToFile, MainTextView); 
 
-            Application.Top.Add(mainMenu, mainWindow);
+            MainWindow.Add(MainTextView);
+
+            Application.Top.Add(MainMenu, MainWindow);
 
             Application.Run();
 
