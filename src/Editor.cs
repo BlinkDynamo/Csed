@@ -38,94 +38,110 @@ namespace Csed
         private TextView MainTextView;
 
         // Both the field and property are nullable in case just `csed` is entered.
-        private string? PathToFile;
-        public string? Property_PathToFile
+        private string? CurrentFile;
+        public string? Property_CurrentFile
         {
-            get { return PathToFile; }
-            set { PathToFile = value; }
+            get { return CurrentFile; }
+            set { CurrentFile = value; }
         }
-        private bool FileIsLoaded = false; // Lets me check if a file is loaded before calling tv.CloseFile().
-        
+       
+        // Constructor.
         public Editor()
         {
             Application.Init();
 
-            // Gui setup.
-            MainMenu = new MenuBar(new MenuBarItem[] {
-                new MenuBarItem("_File", new MenuItem[] {
-                    new MenuItem("_Open", "", () => {
-                        OpenDialog FileDialog = new OpenDialog("Open", "") {
-                            CanChooseDirectories = false,
-                            CanChooseFiles = true,
-                            AllowsMultipleSelection = false,
-                        };
-
-                        Application.Run(FileDialog);
-
-                        CsedOpenFile(FileDialog.FilePath.ToString(), ref FileIsLoaded, MainTextView); 
-                    }),
-                    new MenuItem("_Save", "", () => {
-                        CsedSaveFile(PathToFile, MainTextView); 
-                    }),
-                    new MenuItem("_Close", "", () => {
-                        CsedCloseFile(ref FileIsLoaded, MainTextView); 
-                    }),
-                    new MenuItem("_Quit", "", () => {
-                        Application.RequestStop();
-                    }),
-                }),
-            });
-
-            // Nest a MainWindowdow for the editor.
+            // The main window.
             MainWindow = new Window() {
                 X = 0,
                 Y = 0,
                 Width = Dim.Fill(),
                 Height = Dim.Fill() - 1
             };
-
+            
+            // The main text view that will be nested in the main window.
             MainTextView = new TextView() {
                 X = 0,
                 Y = 0,
                 Width = Dim.Fill(),
                 Height = Dim.Fill(),
             };
+
+            // Menu Bar.
+            MainMenu = new MenuBar(new MenuBarItem[] {
+                // File Menu.
+                new MenuBarItem("_File", new MenuItem[] {
+                    // Open.
+                    new MenuItem("_Open", "", () => { 
+                        OpenDialog OpenFileDialog = new OpenDialog("Open", "") {
+                            CanChooseDirectories = false,
+                            CanChooseFiles = true,
+                            AllowsMultipleSelection = false,
+                        };
+
+                        Application.Run(OpenFileDialog);
+
+                        if ((MainTextView.IsDirty) && (CurrentFile != null)) {
+                            MessageBox.Query("", "You have unsaved changes."); 
+                        }
+                        else {
+                            CurrentFile = OpenFileDialog.FilePath.ToString();
+                            CsedOpenFile(CurrentFile, MainTextView); 
+                        }
+                    }),
+                    // Save.
+                    new MenuItem("_Save", "", () => {
+                        // This checks null twice with CsedSaveFile(). Change this later.
+                        if (CurrentFile != null) {
+                            CsedSaveFile(CurrentFile, MainTextView); 
+                        }
+                        else {
+                            SaveDialog SaveFileDialog = new SaveDialog("Save", "");
+                            Application.Run(SaveFileDialog);
+                            CurrentFile = SaveFileDialog.FilePath.ToString();
+                            CsedSaveFile(CurrentFile, MainTextView);
+                        }
+                    }),
+                    // Close.
+                    new MenuItem("_Close", "", () => {
+                        CsedCloseFile(ref CurrentFile, MainTextView); 
+                    }),
+                    // Quit.
+                    new MenuItem("_Quit", "", () => {
+                        Application.RequestStop();
+                    }),
+                }),
+            }); 
         }
+
+        // Methods.
         
-        // These following methods are POST-DIALOG. They are simply doing the action specified.
-        
-        private void CsedSaveFile(string? PathToFile, TextView? tv)  
+        private void CsedSaveFile(string? CurrentFile, TextView tv)  
         {
-            if (tv != null) { 
-                if (PathToFile != null) {
-                    System.IO.File.WriteAllText(PathToFile, tv.Text.ToString());
-                }
+            if (CurrentFile != null) {
+                System.IO.File.WriteAllText(CurrentFile, tv.Text.ToString());
             }
         }
 
-        private void CsedOpenFile(string? PathToFile, ref bool FileIsLoaded, TextView? tv) 
+        private void CsedOpenFile(string? CurrentFile, TextView tv) 
         {
-            if (tv != null) { 
-                if (PathToFile != null) {
-                    tv.LoadFile(PathToFile);
-                    FileIsLoaded = true;
-                }
+            if (CurrentFile != null) {
+                tv.LoadFile(CurrentFile);
             }
         }
 
-        private void CsedCloseFile(ref bool FileIsLoaded, TextView? tv) 
+        private void CsedCloseFile(ref string? CurrentFile, TextView tv) 
         {
-            if (tv != null) {
-                if (FileIsLoaded) {
-                    tv.CloseFile();
-                    FileIsLoaded = false;
-                }
+            if (CurrentFile != null) {
+                tv.CloseFile();
+                CurrentFile = null;
             }
         }
         
+        // Driver method.
+
         public void CsedRun()
         {
-            CsedOpenFile(PathToFile, ref FileIsLoaded, MainTextView); 
+            CsedOpenFile(CurrentFile, MainTextView); 
 
             MainWindow.Add(MainTextView);
 
