@@ -54,11 +54,11 @@ namespace Csed
             MainMenu = new MenuBar(new MenuBarItem[] {
                 new MenuBarItem("_File", new MenuItem[] {
                     new MenuItem("_Open", "", () => {
-                        OpenDialog FileDialog = new OpenDialog("Open", "");
-
-                        FileDialog.CanChooseDirectories = false;
-                        FileDialog.CanChooseFiles = true;
-                        FileDialog.AllowsMultipleSelection = false;
+                        OpenDialog FileDialog = new OpenDialog("Open", "") {
+                            CanChooseDirectories = false,
+                            CanChooseFiles = true,
+                            AllowsMultipleSelection = false,
+                        };
 
                         Application.Run(FileDialog);
 
@@ -88,30 +88,38 @@ namespace Csed
                 X = 0,
                 Y = 0,
                 Width = Dim.Fill(),
-                Height = Dim.Fill()
-            }; 
+                Height = Dim.Fill(),
+            };
         }
-
+        
+        // These following methods are POST-DIALOG. They are simply doing the action specified.
+        
         private void CsedSaveFile(string? PathToFile, TextView? tv)  
         {
-            if ((PathToFile != null) && (tv != null)) {
-                System.IO.File.WriteAllText(PathToFile, tv.Text.ToString());
+            if (tv != null) { 
+                if (PathToFile != null) {
+                    System.IO.File.WriteAllText(PathToFile, tv.Text.ToString());
+                }
             }
         }
 
         private void CsedOpenFile(string? PathToFile, ref bool FileIsLoaded, TextView? tv) 
         {
-            if ((PathToFile != null) && (tv != null)) { 
-                tv.LoadFile(PathToFile);
-                FileIsLoaded = true;
+            if (tv != null) { 
+                if (PathToFile != null) {
+                    tv.LoadFile(PathToFile);
+                    FileIsLoaded = true;
+                }
             }
         }
 
         private void CsedCloseFile(ref bool FileIsLoaded, TextView? tv) 
         {
-            if ((tv != null) && (FileIsLoaded)){
-                tv.CloseFile();
-                FileIsLoaded = false;
+            if (tv != null) {
+                if (FileIsLoaded) {
+                    tv.CloseFile();
+                    FileIsLoaded = false;
+                }
             }
         }
         
