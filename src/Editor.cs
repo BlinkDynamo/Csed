@@ -55,9 +55,12 @@ namespace Csed
                 X = 0,
                 Y = 0,
                 Width = Dim.Fill(),
-                Height = Dim.Fill() - 1
+                Height = Dim.Fill(),
             };
-            
+            MainWindow.Border.Background = Color.Black;
+            MainWindow.Border.BorderBrush = Color.Black;
+            MainWindow.Border.BorderStyle = BorderStyle.None;
+
             // The main text view that will be nested in the main window.
             MainTextView = new TextView() {
                 X = 0,
@@ -72,80 +75,116 @@ namespace Csed
                 new MenuBarItem("_File", new MenuItem[] {
                     // Open.
                     new MenuItem("_Open", "", () => { 
-                        OpenDialog OpenFileDialog = new OpenDialog("Open", "") {
-                            CanChooseDirectories = false,
-                            CanChooseFiles = true,
-                            AllowsMultipleSelection = false,
-                        };
-
-                        Application.Run(OpenFileDialog);
-
-                        if ((MainTextView.IsDirty) && (CurrentFile != null)) {
-                            MessageBox.Query("", "You have unsaved changes."); 
-                        }
-                        else {
-                            CurrentFile = OpenFileDialog.FilePath.ToString();
-                            CsedOpenFile(CurrentFile, MainTextView); 
-                        }
+                        CsedMenuOpenFile(); 
                     }),
                     // Save.
-                    new MenuItem("_Save", "", () => {
-                        // This checks null twice with CsedSaveFile(). Change this later.
-                        if (CurrentFile != null) {
-                            CsedSaveFile(CurrentFile, MainTextView); 
-                        }
-                        else {
-                            SaveDialog SaveFileDialog = new SaveDialog("Save", "");
-                            Application.Run(SaveFileDialog);
-                            CurrentFile = SaveFileDialog.FilePath.ToString();
-                            CsedSaveFile(CurrentFile, MainTextView);
-                        }
+                    new MenuItem("_Save", "", () => {    
+                        CsedMenuSaveFile(); 
+                    }),
+                    // Save As.
+                    new MenuItem("Save _As", "", () => {    
+                        CsedMenuSaveAsFile(); 
                     }),
                     // Close.
                     new MenuItem("_Close", "", () => {
-                        CsedCloseFile(ref CurrentFile, MainTextView); 
+                        CsedMenuCloseFile(); 
                     }),
                     // Quit.
                     new MenuItem("_Quit", "", () => {
-                        Application.RequestStop();
+                        CsedMenuQuit(); 
                     }),
                 }),
             }); 
         }
 
         // Methods.
-        
-        private void CsedSaveFile(string? CurrentFile, TextView tv)  
+        private void CsedCreateEmptyFile(string PathToFile)
         {
-            if (CurrentFile != null) {
-                System.IO.File.WriteAllText(CurrentFile, tv.Text.ToString());
+            File.Create(PathToFile).Dispose();
+        }
+
+        private void CsedMenuOpenFile()
+        {
+            OpenDialog OpenFileDialog = new OpenDialog("Open", "") {
+                CanChooseDirectories = false,
+                CanChooseFiles = true,
+                AllowsMultipleSelection = false,
+            };
+
+            Application.Run(OpenFileDialog);
+            
+            if (!OpenFileDialog.Canceled) {      
+                // Prompt the user if they have unsaved changes.
+                if ((MainTextView.IsDirty) && (CurrentFile != null)) {
+                    MessageBox.Query("Attention", "You have unsaved changes."); 
+                }
+                else {
+                    // Since FileDialog will only let you open a file that exists, 
+                    // no checking of CurrentFile is required.
+                    CurrentFile = OpenFileDialog.FilePath.ToString();
+                    MainTextView.LoadFile(CurrentFile); 
+                }
             }
         }
 
-        private void CsedOpenFile(string? CurrentFile, TextView tv) 
+        private void CsedMenuSaveFile()
         {
             if (CurrentFile != null) {
-                tv.LoadFile(CurrentFile);
+                System.IO.File.WriteAllText(CurrentFile, MainTextView.Text.ToString()); 
+                MainTextView.LoadFile(CurrentFile);
             }
-        }
-
-        private void CsedCloseFile(ref string? CurrentFile, TextView tv) 
-        {
-            if (CurrentFile != null) {
-                tv.CloseFile();
-                CurrentFile = null;
+            else {
+               CsedMenuSaveAsFile(); 
             }
         }
         
+        private void CsedMenuSaveAsFile()
+        { 
+            SaveDialog WriteFileDialog = new SaveDialog("Save", "");
+            Application.Run(WriteFileDialog);
+            if (!WriteFileDialog.Canceled) {
+                CurrentFile = WriteFileDialog.FilePath.ToString();
+                CsedCreateEmptyFile(CurrentFile);
+                System.IO.File.WriteAllText(CurrentFile, MainTextView.Text.ToString()); 
+                MainTextView.LoadFile(CurrentFile); 
+            }
+        }
+
+        private void CsedMenuCloseFile()
+        {
+            // Prompt the user if they have unsaved changes.
+            if (CurrentFile != null) {
+                if (MainTextView.IsDirty) {
+                    MessageBox.Query("Attention", "You have unsaved changes."); 
+                }
+                else {
+                    CurrentFile = null;
+                    MainTextView.CloseFile();
+                }
+            }
+        }
+        
+        private void CsedMenuQuit()
+        {
+            if ((MainTextView.IsDirty) && (CurrentFile != null)) {
+                MessageBox.Query("Attention", "You have unsaved changes."); 
+            }
+            else {
+                Application.RequestStop();
+            }
+        }
+
         // Driver method.
 
         public void CsedRun()
         {
-            CsedOpenFile(CurrentFile, MainTextView); 
+            if (CurrentFile != null) {
+                MainTextView.LoadFile(CurrentFile); 
+            }
 
             MainWindow.Add(MainTextView);
 
-            Application.Top.Add(MainMenu, MainWindow);
+            Application.Top.Add(MainWindow, MainMenu);
 
             Application.Run();
 
