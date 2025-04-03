@@ -111,19 +111,35 @@ namespace Csed
                 AllowsMultipleSelection = false,
             };
 
-            Application.Run(OpenFileDialog);
-            
+            Application.Run(OpenFileDialog); 
+             
             if (!OpenFileDialog.Canceled) {      
+                CurrentFile = OpenFileDialog.FilePath.ToString();
+                
                 // Prompt the user if they have unsaved changes.
-                if ((MainTextView.IsDirty) && (CurrentFile != null)) {
-                    MessageBox.Query("Attention", "You have unsaved changes."); 
-                }
-                else {
-                    // Since FileDialog will only let you open a file that exists, 
-                    // no checking of CurrentFile is required.
-                    CurrentFile = OpenFileDialog.FilePath.ToString();
-                    MainTextView.LoadFile(CurrentFile); 
-                }
+                if (CurrentFile != null) {
+                    if (MainTextView.IsDirty == true) {
+                        int ChoiceIndex = MessageBox.Query("Attention", "You have unsaved changes.", ["Discard", "Save"]); 
+                        switch (ChoiceIndex)
+                        {
+                            case -1:
+                                return;
+
+                            case 0:
+                                MainTextView.LoadFile(CurrentFile);
+                                break;
+
+                            case 1:
+                                CsedMenuSaveFile();
+                                MainTextView.LoadFile(CurrentFile);
+                                break;
+                        }
+                    }
+                    else {
+                        // Since FileDialog will only let you open a file that exists, no checking of CurrentFile is required.
+                        MainTextView.LoadFile(CurrentFile); 
+                    }
+                }  
             }
         }
 
@@ -155,13 +171,23 @@ namespace Csed
             // Prompt the user if they have unsaved changes.
             if (CurrentFile != null) {
                 if (MainTextView.IsDirty) {
-                    MessageBox.Query("Attention", "You have unsaved changes."); 
-                }
-                else {
-                    CurrentFile = null;
-                    MainTextView.CloseFile();
-                }
-            }
+                    int ChoiceIndex = MessageBox.Query("Attention", "You have unsaved changes.", ["Discard", "Save"]); 
+                    switch (ChoiceIndex) {
+                        case -1:
+                            return;
+
+                        case 0:
+                            break;
+
+                        case 1:
+                            CsedMenuSaveFile();
+                            break;
+                    }
+                } 
+                MainTextView.CloseFile();
+                MainTextView.Text = string.Empty; // Doing this after CloseFile() for some reason resets IsDirty.
+                CurrentFile = null;
+            } 
         }
         
         private void CsedMenuQuit()
