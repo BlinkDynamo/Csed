@@ -37,7 +37,7 @@ namespace Csed
         private Window MainWindow;
         private TextView MainTextView;
 
-        // Both the field and property are nullable in case just `csed` is entered.
+        // CurrentFile will be set to the filename of the currently open file, and null upon closing of the file.
         private string? CurrentFile;
         public string? Property_CurrentFile
         {
@@ -113,33 +113,34 @@ namespace Csed
 
             Application.Run(OpenFileDialog); 
              
-            if (!OpenFileDialog.Canceled) {      
-                CurrentFile = OpenFileDialog.FilePath.ToString();
-                
+            if (!OpenFileDialog.Canceled) { 
                 // Prompt the user if they have unsaved changes.
-                if (CurrentFile != null) {
-                    if (MainTextView.IsDirty == true) {
-                        int ChoiceIndex = MessageBox.Query("Attention", "You have unsaved changes.", ["Discard", "Save"]); 
-                        switch (ChoiceIndex)
-                        {
-                            case -1:
-                                return;
+                if (MainTextView.IsDirty == true) {
+                    int ChoiceIndex = MessageBox.Query("Attention", "You have unsaved changes.", ["Discard", "Save"]); 
+                    switch (ChoiceIndex)
+                    {
+                        case -1:
+                            return;
 
-                            case 0:
-                                MainTextView.LoadFile(CurrentFile);
-                                break;
+                        case 0:
+                            CsedCloseFile(); 
+                            CurrentFile = OpenFileDialog.FilePath.ToString();
+                            MainTextView.LoadFile(CurrentFile);
+                            break;
 
-                            case 1:
-                                CsedMenuSaveFile();
-                                MainTextView.LoadFile(CurrentFile);
-                                break;
-                        }
+                        case 1:
+                            CsedMenuSaveFile();
+                            CsedCloseFile();
+                            CurrentFile = OpenFileDialog.FilePath.ToString();
+                            MainTextView.LoadFile(CurrentFile);
+                            break;
                     }
-                    else {
-                        // Since FileDialog will only let you open a file that exists, no checking of CurrentFile is required.
-                        MainTextView.LoadFile(CurrentFile); 
-                    }
-                }  
+                }
+                else {
+                    // Since FileDialog will only let you open a file that exists, no checking of CurrentFile is required.
+                    CurrentFile = OpenFileDialog.FilePath.ToString();
+                    MainTextView.LoadFile(CurrentFile); 
+                }
             }
         }
 
@@ -184,10 +185,18 @@ namespace Csed
                             break;
                     }
                 } 
-                MainTextView.CloseFile();
-                MainTextView.Text = string.Empty; // Doing this after CloseFile() for some reason resets IsDirty.
-                CurrentFile = null;
+                CsedCloseFile(); 
             } 
+        }
+
+        private void CsedCloseFile()
+        {
+            if (CurrentFile == null) {
+                return;
+            }
+            MainTextView.CloseFile();
+            MainTextView.Text = string.Empty; // Doing this after CloseFile() for some reason resets IsDirty.
+            CurrentFile = null;
         }
         
         private void CsedMenuQuit()

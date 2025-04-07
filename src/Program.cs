@@ -35,11 +35,13 @@ namespace Csed
     {
         static int Main(string [] args)
         {
+            // Only 'csed' and 'csed filename.txt' are valid input.
             if (args.Length > 1) {
                 Console.WriteLine("Invalid usage.");
                 Console.WriteLine("Usage: `csed <FILENAME>`, or simply `csed`");
                 return 1;
             }
+            // Create an Editor e, set Property_CurrentFile if a filename was provided, and begin.
             Editor e = new Editor();
             if (args.Length == 1) {
                 e.Property_CurrentFile = args[0];
